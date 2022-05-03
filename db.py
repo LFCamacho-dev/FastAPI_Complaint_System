@@ -13,5 +13,3 @@ DATABASE_URL = f"postgresql://" \
 
 database = databases.Database(DATABASE_URL)
 metadata = sqlalchemy.MetaData()
-
-
