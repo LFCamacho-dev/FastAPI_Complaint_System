@@ -1,20 +1,20 @@
+from datetime import datetime, timedelta
 from typing import Optional
 import jwt
-from datetime import datetime, timedelta
 from decouple import config
 from fastapi import HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from starlette.requests import Request
 from db import database
-from models import user
+from models import user, RoleType
 
 
 class AuthManager:
     @staticmethod
-    def encode_token(user):
+    def encode_token(usr):
         try:
             payload = {
-                "sub": user["id"],
+                "sub": usr["id"],
                 "exp": datetime.utcnow() + timedelta(minutes=120),
             }
             return jwt.encode(payload, config("JWT_SECRET_KEY"), algorithm="HS256")
@@ -36,3 +36,21 @@ class CustomHTTPBearer(HTTPBearer):
             raise HTTPException(401, "Token expired")
         except jwt.InvalidTokenError:
             raise HTTPException(401, "Invalid token")
+
+
+oauth2_scheme = CustomHTTPBearer()
+
+
+def is_complainer(request: Request):
+    if not request.state.user["role"] == RoleType.complainer:
+        raise HTTPException(403, "Forbidden")
+
+
+def is_approver(request: Request):
+    if not request.state.user["role"] == RoleType.approver:
+        raise HTTPException(403, "Forbidden")
+
+
+def is_admin(request: Request):
+    if not request.state.user["role"] == RoleType.admin:
+        raise HTTPException(403, "Forbidden")
